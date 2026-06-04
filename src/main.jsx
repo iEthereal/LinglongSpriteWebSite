@@ -29,6 +29,7 @@ import './styles.css'
 const base = '/LinglongSpriteWebSite'
 const apkUrl = `${base}/downloads/linglong-mas-debug.apk`
 const qrUrl = `${base}/downloads/qr-download.svg`
+const setupGuideUrl = 'https://my.feishu.cn/docx/PAxwdcc0WocTY4xzxFDcvypsnMe?from=from_copylink'
 
 const capabilities = [
   { icon: Mic2, title: '小智语音对话', text: '实测 v2 协议链路，按住说话、连续通话、TTS 播放与用户打断流程完整可用。' },
@@ -55,6 +56,7 @@ function Header() {
           <a href="#features">能力</a>
           <a href="#design">设计</a>
           <a href="#download">下载</a>
+          <a href={setupGuideUrl} target="_blank" rel="noreferrer">配置指南</a>
           <a className="nav-cta" href="https://github.com/iEthereal/LinglongSpriteWebSite" target="_blank" rel="noreferrer">GitHub ↗</a>
         </nav>
       </div>
@@ -111,7 +113,7 @@ function Hero() {
         <p className="hero-lead fade-up delay-2">一款为手机场景重新构建的小智语音助手，把语音、文本、视觉与 MCP 工具连接成自然的一问一答。</p>
         <div className="hero-actions fade-up delay-3">
           <a className="btn-primary" href={apkUrl} download><ArrowDownToLine size={18} />下载 Android 测试版 APK</a>
-          <a className="btn-ghost" href="#features">了解能力<ChevronRight size={17} /></a>
+          <a className="btn-ghost" href={setupGuideUrl} target="_blank" rel="noreferrer">连接服务端指南<ChevronRight size={17} /></a>
         </div>
         <p className="release-note fade-up delay-4">当前为公开测试包，安装时 Android 可能提示“未知来源”，请仅在可信设备上测试。</p>
       </div>
@@ -174,8 +176,11 @@ function Download() {
         <div>
           <span className="download-badge"><ShieldCheck size={15} /> Public Test Build</span>
           <h2>现在开始，<br />在 Android 上测试玲珑 MAS。</h2>
-          <p>下载 APK 或用手机扫描二维码。当前版本用于功能验收与朋友内测，后续会替换为正式签名包。</p>
-          <a className="btn-primary" href={apkUrl} download><ArrowDownToLine size={18} />下载 Android 测试版 APK</a>
+          <p>下载 APK 或用手机扫描二维码。首次使用可参考客户端连接服务端配置指南，完成小智服务端、设备 ID 与 Token 配置。</p>
+          <div className="download-actions">
+            <a className="btn-primary" href={apkUrl} download><ArrowDownToLine size={18} />下载 Android 测试版 APK</a>
+            <a className="btn-ghost" href={setupGuideUrl} target="_blank" rel="noreferrer">查看配置指南<ChevronRight size={17} /></a>
+          </div>
         </div>
         <div className="qr-card"><img src={qrUrl} alt="玲珑 MAS APK 下载二维码" /><span>扫码下载 APK</span></div>
       </div>
@@ -201,7 +206,7 @@ function App() {
       <main><Hero /><hr className="divider" /><Features /><hr className="divider" /><DesignShowcase /><hr className="divider" /><Download /></main>
       <footer className="footer shell">
         <div><b>玲珑 MAS</b><span>Linglong Master Agent System</span></div>
-        <p>测试版仅用于体验验证。隐私保护、授权码机制、正式发布渠道将在后续版本完善。</p>
+        <p>测试版仅用于体验验证。首次配置请查看 <a href={setupGuideUrl} target="_blank" rel="noreferrer">客户端连接服务端配置指南</a>。隐私保护、授权码机制、正式发布渠道将在后续版本完善。</p>
       </footer>
     </>
   )

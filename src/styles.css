@@ -195,3 +195,8 @@ h1 { margin: 22px 0 0; font-family: var(--display); font-size: clamp(58px, 8.5vw
   .mic-orb { width: 66px; height: 66px; margin-top: 26px; }
   .app-top b { font-size: 17px; }
 }
+
+.download-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.footer a { color: var(--gold); text-decoration: none; border-bottom: 1px solid rgba(224,185,122,.35); }
+.footer a:hover { color: var(--ink); border-bottom-color: rgba(242,239,232,.55); }
+@media (max-width: 680px) { .download-actions { align-items: stretch; } .download-actions .btn-primary, .download-actions .btn-ghost { width: 100%; } }
