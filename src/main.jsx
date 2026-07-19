@@ -19,7 +19,7 @@ import './styles.css'
 
 const base = '/LinglongSpriteWebSite'
 const apkUrl = `${base}/downloads/linglong-mas.apk`
-const qrUrl = `${base}/downloads/qr-download.svg`
+const qrUrl = `${base}/downloads/qr-website.png`
 
 const capabilities = [
   {icon: Mic2, title: '小智语音对话', text: '连续通话、按住说话、TTS 播放与用户打断，在一条自然对话链路中完成。'},
@@ -40,7 +40,7 @@ const STAGE_TRANSITION_MS = 680
 
 function Header() {
   return <header className="site-header"><div className="header-inner shell">
-    <a className="brand" href="#top" aria-label="玲珑 MAS 首页"><span className="brand-mark">玲</span><span>玲珑 MAS</span></a>
+    <a className="brand" href="#top" aria-label="玲珑 MAS 首页"><img class="brand-mark" src="/LinglongSpriteWebSite/assets/brand_icon.png" alt="玲"/><span>玲珑 MAS</span></a>
     <nav className="site-nav" aria-label="主导航">
       <a href="#features">能力</a><a href="#design">产品截图</a><a href="#download">下载</a>
     </nav>
