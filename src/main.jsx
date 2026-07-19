@@ -1,215 +1,135 @@
-import React, { useEffect } from 'react'
-import { createRoot } from 'react-dom/client'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
+import {createRoot} from 'react-dom/client'
 import {
   ArrowDownToLine,
-  Bot,
+  Box,
   Camera,
   ChevronRight,
-  FileText,
+  Check,
+  Copy,
   Globe2,
   Mic2,
-  MessageCircle,
-  Search,
   ShieldCheck,
   Sparkles,
   TextCursorInput,
-  Video,
-  Image as ImageIcon,
-  Settings,
-  Box,
-  Phone,
-  Plus,
-  Wifi,
-  Battery,
-  Signal,
-  Play,
 } from 'lucide-react'
+import {readReferralCode, referralPayload} from './referral.js'
+import {shortestStageDistance, stageSlotForItem} from './productStage.js'
 import './styles.css'
 
 const base = '/LinglongSpriteWebSite'
-const apkUrl = `${base}/downloads/linglong-mas-debug.apk`
+const apkUrl = `${base}/downloads/linglong-mas.apk`
 const qrUrl = `${base}/downloads/qr-download.svg`
-const setupGuideUrl = 'https://my.feishu.cn/docx/PAxwdcc0WocTY4xzxFDcvypsnMe?from=from_copylink'
 
 const capabilities = [
-  { icon: Mic2, title: '小智语音对话', text: '实测 v2 协议链路，按住说话、连续通话、TTS 播放与用户打断流程完整可用。' },
-  { icon: TextCursorInput, title: '文本 MCP', text: '不方便开口时，把输入文字作为 MCP 上下文交给小智总结回答，而不是回退本机模型。' },
-  { icon: Camera, title: '视觉识别', text: '服务端下发 vision endpoint 后，支持拍照与选图上传，让画面自然进入对话。' },
-  { icon: Globe2, title: 'Web 搜索', text: '客户端搜索结果回传给小智，由小智整合为自然语言语音或文本回复。' },
+  {icon: Mic2, title: '小智语音对话', text: '连续通话、按住说话、TTS 播放与用户打断，在一条自然对话链路中完成。'},
+  {icon: TextCursorInput, title: '文本 MCP', text: '不方便开口时，把文字作为上下文交给小智继续回答。'},
+  {icon: Camera, title: '视觉识别', text: '拍照或选图后，让画面自然进入当前对话。'},
+  {icon: Globe2, title: 'Web 搜索', text: '将搜索结果回传给小智，整合成语音或文字回复。'},
 ]
 
-const avatars = [
-  { src: `${base}/assets/linglong-idle.png`, label: 'Idle' },
-  { src: `${base}/assets/linglong-speaking.png`, label: 'Speaking' },
-  { src: `${base}/assets/linglong-searching.png`, label: 'Searching' },
+const productScreens = [
+  {id: 'voice', src: `${base}/assets/语音通话.png`, title: '语音通话', description: '自然连续对话与实时语音反馈。'},
+  {id: 'text', src: `${base}/assets/文本聊天.png`, title: '文本聊天', description: '语音之外，也能在同一智能体上下文中继续交流。'},
+  {id: 'agents', src: `${base}/assets/发现智能体.png`, title: '发现智能体', description: '按场景选择适合你的专属智能体。'},
+  {id: 'list', src: `${base}/assets/列表对话.png`, title: '列表对话', description: '按智能体和会话快速回到上下文。'},
+  {id: 'invite', src: `${base}/assets/会员与邀请.png`, title: '会员与邀请', description: '推荐加入后，在 App 中完成邀请关系关联。'},
 ]
+
+const STAGE_TRANSITION_MS = 680
 
 function Header() {
-  return (
-    <header className="site-header">
-      <div className="header-inner shell">
-        <a className="brand" href="#top" aria-label="玲珑 MAS 首页">
-          <span className="brand-mark">玲</span>
-          <span>玲珑 MAS</span>
-        </a>
-        <nav className="site-nav" aria-label="主导航">
-          <a href="#features">能力</a>
-          <a href="#design">设计</a>
-          <a href="#download">下载</a>
-          <a href={setupGuideUrl} target="_blank" rel="noreferrer">配置指南</a>
-          <a className="nav-cta" href="https://github.com/iEthereal/LinglongSpriteWebSite" target="_blank" rel="noreferrer">GitHub ↗</a>
-        </nav>
-      </div>
-    </header>
-  )
+  return <header className="site-header"><div className="header-inner shell">
+    <a className="brand" href="#top" aria-label="玲珑 MAS 首页"><span className="brand-mark">玲</span><span>玲珑 MAS</span></a>
+    <nav className="site-nav" aria-label="主导航">
+      <a href="#features">能力</a><a href="#design">产品截图</a><a href="#download">下载</a>
+    </nav>
+  </div></header>
 }
 
-function AppPhonePreview({ compact = false }) {
-  return (
-    <div className={compact ? 'device device-compact' : 'device'} aria-label="玲珑 MAS 安卓界面预览">
-      <div className="device-metal" />
-      <div className="device-screen">
-        <div className="statusbar">
-          <span>12:07</span>
-          <div className="status-icons"><Signal size={18} /><Wifi size={17} /><Battery size={21} /></div>
-        </div>
-        <div className="app-top">
-          <span className="app-logo">◇</span>
-          <div><b>玲珑 MAS</b><small>手机 AI 语音助手</small></div>
-        </div>
-        <div className="connect-pill"><i /> 小智未连接 <span>文本</span><b>语音</b></div>
-        <div className="quick-row">
-          <span><Plus size={15} />新对话</span><span>hello he</span><span>我回来啦。对。</span><span>没。</span>
-        </div>
-        <div className="chat-card">
-          <div className="msg user"><small>12:05 <em>语音</em></small>hello hello,你都会什么呀？做个自我介绍吧。</div>
-          <div className="msg ai">
-            <small><em>语音</em><time>12:05</time></small>
-            <p>😆哈啰哈啰！我是小智啦，你的专属玲珑MAS小助手～我可以陪你聊天、讲笑话、放音乐，还能帮你查天气、搜新闻，甚至能看懂你的照片喔！</p>
-            <span className="audio-chip"><Play size={13} />22s · 66KB</span>
-          </div>
-        </div>
-        <div className="tool-strip">
-          <span><FileText size={18}/>文本</span><span><Mic2 size={19}/>语音</span><span><ImageIcon size={18}/>选图</span><span><Camera size={18}/>拍照</span><span><ShieldCheck size={18}/>视觉</span><span><Search size={19}/>搜索</span><span><Video size={18}/>视频</span>
-        </div>
-        <div className="voice-panel">
-          <div className="voice-tabs"><span><Phone size={16}/>连续通话</span><b><Mic2 size={17}/>按住说话</b><small>TX 140帧/23KB · RX 359帧/66KB</small></div>
-          <div className="mic-orb"><Mic2 size={44}/></div>
-          <strong>未连接：请先连接小智</strong>
-          <footer><span>未连接</span><button>连接</button></footer>
-        </div>
-        <div className="tabbar"><b><MessageCircle size={22}/>对话</b><span><Bot size={22}/>模型</span><span><Settings size={22}/>设置</span></div>
-      </div>
+function DownloadButton({onDownload, className = 'btn-primary'}) {
+  return <a className={className} href={apkUrl} download onClick={onDownload}><ArrowDownToLine size={18} />下载 Android 正式版 APK</a>
+}
+
+function ReferralBanner({referralCode, copied, onCopy}) {
+  if (!referralCode) return null
+  return <div className="referral-banner fade-up delay-4">
+    <div><span>受邀加入玲珑 MAS</span><strong>邀请码：{referralCode}</strong><small>下载后在 App 首启时完成邀请关联</small></div>
+    <button type="button" onClick={onCopy}>{copied ? <Check size={15} /> : <Copy size={15} />}{copied ? '已复制' : '复制推荐码'}</button>
+  </div>
+}
+
+function Hero({referralCode, copied, onCopy}) {
+  return <section id="top" className="hero shell">
+    <div className="hero-copy">
+      <div className="hero-badge fade-up"><Sparkles size={15} /> Android AI Assistant</div>
+      <h1 className="fade-up delay-1">智掌全局，<br />玲珑入微。</h1>
+      <p className="hero-lead fade-up delay-2">一款为手机场景重新构建的小智语音助手，把语音、文本、视觉与 MCP 工具连接成自然的一问一答。</p>
+      <div className="hero-actions fade-up delay-3"><DownloadButton onDownload={onCopy} /></div>
+      <ReferralBanner referralCode={referralCode} copied={copied} onCopy={onCopy} />
     </div>
-  )
-}
-
-function Hero() {
-  return (
-    <section id="top" className="hero shell">
-      <div className="hero-copy">
-        <div className="hero-badge fade-up"><Sparkles size={15} /> Android-first AI Assistant</div>
-        <h1 className="fade-up delay-1">智掌全局，<br />玲珑入微。</h1>
-        <p className="hero-lead fade-up delay-2">一款为手机场景重新构建的小智语音助手，把语音、文本、视觉与 MCP 工具连接成自然的一问一答。</p>
-        <div className="hero-actions fade-up delay-3">
-          <a className="btn-primary" href={apkUrl} download><ArrowDownToLine size={18} />下载 Android 测试版 APK</a>
-          <a className="btn-ghost" href={setupGuideUrl} target="_blank" rel="noreferrer">连接服务端指南<ChevronRight size={17} /></a>
-        </div>
-        <p className="release-note fade-up delay-4">当前为公开测试包，安装时 Android 可能提示“未知来源”，请仅在可信设备上测试。</p>
-      </div>
-      <div className="hero-visual fade-up delay-2">
-        <div className="halo halo-a" /><div className="halo halo-b" />
-        <AppPhonePreview compact />
-      </div>
-    </section>
-  )
+    <div className="hero-visual fade-up delay-2"><div className="halo halo-a" /><div className="halo halo-b" />
+      <figure className="hero-shot"><img src={productScreens[0].src} alt="玲珑 MAS 语音通话界面" /><figcaption><span>LIVE VOICE</span><b>随时开口，自然对话</b></figcaption></figure>
+    </div>
+  </section>
 }
 
 function Features() {
-  return (
-    <section id="features" className="section shell">
-      <div className="section-head fade-up">
-        <span className="eyebrow"><Box size={15} /> Core Capabilities</span>
-        <h2>不是一个入口，<br />而是一套会说话的工具系统。</h2>
-      </div>
-      <div className="feature-grid">
-        {capabilities.map(({ icon: Icon, title, text }, index) => (
-          <article className={`feature-card fade-up delay-${Math.min(index + 1, 4)}`} key={title}>
-            <div className="feature-icon"><Icon size={22} /></div>
-            <h3>{title}</h3><p>{text}</p>
-          </article>
-        ))}
-      </div>
-      <div className="flow-line fade-up delay-4">
-        {['Android-first 全屏体验', '小智云端语音与 TTS', 'MCP 工具扩展', '视觉 / 搜索 / 文本统一对话'].map((item) => <span key={item}>{item}</span>)}
-      </div>
-    </section>
-  )
+  return <section id="features" className="section shell"><div className="section-head fade-up"><span className="eyebrow"><Box size={15} /> Core Capabilities</span><h2>不是一个入口，<br />而是一套会说话的工具系统。</h2></div>
+    <div className="feature-grid">{capabilities.map(({icon: Icon, title, text}, index) => <article className={`feature-card fade-up delay-${Math.min(index + 1, 4)}`} key={title}><div className="feature-icon"><Icon size={22} /></div><h3>{title}</h3><p>{text}</p></article>)}</div>
+  </section>
 }
 
-function DesignShowcase() {
-  return (
-    <section id="design" className="section shell design-section">
-      <div className="section-head center fade-up">
-        <span className="eyebrow">Designed for Mobile</span>
-        <h2>从桌面实验，到真正的<br />手机 App 体验。</h2>
-        <p>官网展示不再使用抽象占位界面，而是复刻当前 Android 端真实聊天、工具栏与语音面板的产品结构。</p>
-      </div>
-      <div className="showcase-wrap">
-        <div className="showcase-phone fade-up delay-1"><AppPhonePreview /></div>
-        <div className="sprite-col">
-          {avatars.map((item, index) => (
-            <div className={`sprite-tile fade-up delay-${index + 1}`} key={item.label}>
-              <i /><img src={item.src} alt={`玲珑 ${item.label} 状态`} loading="lazy" /><span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
+function ProductGallery() {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [moveQueue, setMoveQueue] = useState([])
+  const touchStartX = useRef(null)
+  const requestMove = targetIndex => {
+    if (moveQueue.length || targetIndex === activeIndex) return
+    const distance = shortestStageDistance(activeIndex, targetIndex, productScreens.length)
+    setMoveQueue(Array.from({length: Math.abs(distance)}, () => Math.sign(distance)))
+  }
+  useEffect(() => {
+    if (!moveQueue.length) return undefined
+    const [step, ...remainingSteps] = moveQueue
+    setActiveIndex(currentIndex => (currentIndex + step + productScreens.length) % productScreens.length)
+    const timer = window.setTimeout(() => setMoveQueue(remainingSteps), STAGE_TRANSITION_MS)
+    return () => window.clearTimeout(timer)
+  }, [moveQueue])
+  const handleTouchEnd = event => {
+    const startX = touchStartX.current
+    touchStartX.current = null
+    if (startX === null) return
+    const deltaX = event.changedTouches[0].clientX - startX
+    if (Math.abs(deltaX) < 36) return
+    requestMove((activeIndex + (deltaX < 0 ? 1 : -1) + productScreens.length) % productScreens.length)
+  }
+  return <section id="design" className="section shell design-section"><div className="section-head center fade-up"><span className="eyebrow">Designed for mobile</span><h2>真实的产品界面，<br />完整的使用路径。</h2><p>从对话到智能体发现，再到会员与邀请，所有体验都在 Android 正式版中呈现。</p></div>
+    <div className="product-gallery" aria-label="玲珑 MAS 产品截图，左右滑动或点击样机可环形切换中间展示项" onTouchStart={event => { touchStartX.current = event.touches[0].clientX }} onTouchEnd={handleTouchEnd}>{productScreens.map(({id, src, title, description}, index) => { const slot = stageSlotForItem(index, activeIndex, productScreens.length); return <button className={`product-shot product-shot-${slot} ${index === activeIndex ? 'is-front' : ''}`} type="button" onClick={() => requestMove(index)} aria-pressed={index === activeIndex} key={id}><img src={src} alt={`玲珑 MAS ${title}界面`} loading={index < 2 ? 'eager' : 'lazy'} /><span className="product-shot-caption"><i>0{index + 1}</i><span><b>{title}</b><small>{description}</small></span></span></button> })}</div>
+  </section>
 }
 
-function Download() {
-  return (
-    <section id="download" className="section shell">
-      <div className="download-panel fade-up">
-        <div>
-          <span className="download-badge"><ShieldCheck size={15} /> Public Test Build</span>
-          <h2>现在开始，<br />在 Android 上测试玲珑 MAS。</h2>
-          <p>下载 APK 或用手机扫描二维码。首次使用可参考客户端连接服务端配置指南，完成小智服务端、设备 ID 与 Token 配置。</p>
-          <div className="download-actions">
-            <a className="btn-primary" href={apkUrl} download><ArrowDownToLine size={18} />下载 Android 测试版 APK</a>
-            <a className="btn-ghost" href={setupGuideUrl} target="_blank" rel="noreferrer">查看配置指南<ChevronRight size={17} /></a>
-          </div>
-        </div>
-        <div className="qr-card"><img src={qrUrl} alt="玲珑 MAS APK 下载二维码" /><span>扫码下载 APK</span></div>
-      </div>
-    </section>
-  )
+function Download({onDownload}) {
+  return <section id="download" className="section shell"><div className="download-panel fade-up"><div><span className="download-badge"><ShieldCheck size={15} /> Android Production Release</span><h2>现在开始，<br />在 Android 上使用玲珑 MAS。</h2><p>下载正式版 APK 或扫描二维码。</p><div className="download-actions"><DownloadButton onDownload={onDownload} /></div></div><div className="qr-card"><img src={qrUrl} alt="玲珑 MAS 正式版 APK 下载二维码" /><span>扫码下载正式版 APK</span></div></div></section>
 }
 
 function App() {
+  const [referralCode] = useState(() => readReferralCode(window.location.search))
+  const [copied, setCopied] = useState(false)
+  const copyReferral = useCallback(() => {
+    const payload = referralPayload(referralCode)
+    if (!payload || !navigator.clipboard?.writeText) return
+    navigator.clipboard.writeText(payload).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1800) }).catch(() => {})
+  }, [referralCode])
+
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add('visible')
-      })
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
-    document.querySelectorAll('.fade-up').forEach((node) => observer.observe(node))
-    document.querySelectorAll('.hero .fade-up').forEach((node) => setTimeout(() => node.classList.add('visible'), 50))
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => entry.isIntersecting && entry.target.classList.add('visible')), {threshold: 0.12, rootMargin: '0px 0px -40px 0px'})
+    document.querySelectorAll('.fade-up').forEach(node => observer.observe(node))
+    document.querySelectorAll('.hero .fade-up').forEach(node => window.setTimeout(() => node.classList.add('visible'), 50))
     return () => observer.disconnect()
   }, [])
 
-  return (
-    <>
-      <Header />
-      <main><Hero /><hr className="divider" /><Features /><hr className="divider" /><DesignShowcase /><hr className="divider" /><Download /></main>
-      <footer className="footer shell">
-        <div><b>玲珑 MAS</b><span>Linglong Master Agent System</span></div>
-        <p>测试版仅用于体验验证。首次配置请查看 <a href={setupGuideUrl} target="_blank" rel="noreferrer">客户端连接服务端配置指南</a>。隐私保护、授权码机制、正式发布渠道将在后续版本完善。</p>
-      </footer>
-    </>
-  )
+  return <><Header /><main><Hero referralCode={referralCode} copied={copied} onCopy={copyReferral} /><hr className="divider" /><Features /><hr className="divider" /><ProductGallery /><hr className="divider" /><Download onDownload={copyReferral} /></main><footer className="footer shell"><div><b>玲珑 MAS</b><span>Linglong Master Agent System</span></div><p>Android 正式版已发布。</p></footer></>
 }
 
 createRoot(document.getElementById('root')).render(<App />)
