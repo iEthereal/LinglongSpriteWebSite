@@ -32,4 +32,9 @@ test('ships current product screenshots and production download copy', () => {
     /linglong-(idle|speaking|searching|listening)\.png|app-glass-ui\.png/,
   )
   assert.match(source, /Android 正式版 APK/)
+  assert.match(
+    source,
+    /github\.com\/iEthereal\/LinglongSpriteWebSite\/releases\/latest\/download\/linglong-mas\.apk/,
+  )
+  assert.doesNotMatch(source, /downloads\/linglong-mas\.apk/)
 })
