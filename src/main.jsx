@@ -18,7 +18,7 @@ import {shortestStageDistance, stageSlotForItem} from './productStage.js'
 import './styles.css'
 
 const base = '/LinglongSpriteWebSite'
-const apkUrl = 'https://github.com/iEthereal/LinglongSpriteWebSite/releases/latest/download/linglong-mas.apk'
+const apkUrl = 'https://ghfast.top/https://github.com/iEthereal/LinglongSpriteWebSite/releases/latest/download/linglong-mas.apk'
 const qrUrl = `${base}/downloads/qr-website.png`
 
 const capabilities = [
