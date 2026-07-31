@@ -13,6 +13,7 @@
 
 ```text
 VITE_SHARE_API_URL=https://zjmprvpmzxlxtotroixt.supabase.co/functions/v1/share-api
+VITE_GROWTH_API_URL=https://zjmprvpmzxlxtotroixt.supabase.co/functions/v1/growth-api
 ```
 
 这是公开作品读取地址，不需要且不得添加 Supabase key。Supabase `share-api` 的 CORS 必须允许 `https://iEthereal.github.io`。

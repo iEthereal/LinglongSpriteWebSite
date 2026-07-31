@@ -20,6 +20,7 @@ import {
   readAgentShareRoute,
 } from './agentShare.js'
 import {shortestStageDistance, stageSlotForItem} from './productStage.js'
+import {trackWebsiteEvent} from './websiteGrowth.js'
 import './styles.css'
 
 const base = '/LinglongSpriteWebSite'
@@ -129,7 +130,10 @@ function AgentLandingPage({shareKey}) {
       shareKey,
       fetchImpl: window.fetch.bind(window),
     }).then(share => {
-      if (active) setState({kind: 'ready', share, error: ''})
+      if (active) {
+        setState({kind: 'ready', share, error: ''})
+        void trackWebsiteEvent({baseUrl: import.meta.env.VITE_GROWTH_API_URL, eventName: 'agent_landing_view'})
+      }
     }).catch(error => {
       if (active) setState({kind: 'error', share: null, error: error.message || '作品暂时无法加载'})
     })
@@ -137,6 +141,7 @@ function AgentLandingPage({shareKey}) {
   }, [shareKey])
 
   const copyThenDownload = useCallback(() => {
+    void trackWebsiteEvent({baseUrl: import.meta.env.VITE_GROWTH_API_URL, eventName: 'apk_download_clicked'})
     const payload = state.share && buildAgentSharePayload(state.share.shareKey, state.share.referralCode)
     if (!payload || !navigator.clipboard?.writeText) return
     navigator.clipboard.writeText(payload).then(() => {

@@ -30,6 +30,7 @@ jobs:
       - run: npm run build
         env:
           VITE_SHARE_API_URL: ${{ vars.VITE_SHARE_API_URL }}
+          VITE_GROWTH_API_URL: ${{ vars.VITE_GROWTH_API_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
