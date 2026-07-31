@@ -14,6 +14,11 @@ import {
   TextCursorInput,
 } from 'lucide-react'
 import {readReferralCode, referralPayload} from './referral.js'
+import {
+  buildAgentSharePayload,
+  loadPublicAgentShare,
+  readAgentShareRoute,
+} from './agentShare.js'
 import {shortestStageDistance, stageSlotForItem} from './productStage.js'
 import './styles.css'
 
@@ -63,8 +68,8 @@ function Hero({referralCode, copied, onCopy}) {
   return <section id="top" className="hero shell">
     <div className="hero-copy">
       <div className="hero-badge fade-up"><Sparkles size={15} /> Android AI Assistant</div>
-      <h1 className="fade-up delay-1">智掌全局，<br />玲珑入微。</h1>
-      <p className="hero-lead fade-up delay-2">一款为手机场景重新构建的小智语音助手，把语音、文本、视觉与 MCP 工具连接成自然的一问一答。</p>
+      <h1 className="fade-up delay-1">创建一个真正能开口、能看、能使用工具的专属 AI。</h1>
+      <p className="hero-lead fade-up delay-2">把语音、文本、视觉与 MCP 工具连接成自然对话，再把你的智能体分享给更多人。</p>
       <div className="hero-actions fade-up delay-3"><DownloadButton onDownload={onCopy} /></div>
       <ReferralBanner referralCode={referralCode} copied={copied} onCopy={onCopy} />
     </div>
@@ -113,7 +118,50 @@ function Download({onDownload}) {
   return <section id="download" className="section shell"><div className="download-panel fade-up"><div><span className="download-badge"><ShieldCheck size={15} /> Android Production Release</span><h2>现在开始，<br />在 Android 上使用玲珑 MAS。</h2><p>下载正式版 APK 或扫描二维码。</p><div className="download-actions"><DownloadButton onDownload={onDownload} /></div></div><div className="qr-card"><img src={qrUrl} alt="玲珑 MAS 正式版 APK 下载二维码" /><span>扫码下载正式版 APK</span></div></div></section>
 }
 
+function AgentLandingPage({shareKey}) {
+  const [state, setState] = useState({kind: 'loading', share: null, error: ''})
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    loadPublicAgentShare({
+      baseUrl: import.meta.env.VITE_SHARE_API_URL,
+      shareKey,
+      fetchImpl: window.fetch.bind(window),
+    }).then(share => {
+      if (active) setState({kind: 'ready', share, error: ''})
+    }).catch(error => {
+      if (active) setState({kind: 'error', share: null, error: error.message || '作品暂时无法加载'})
+    })
+    return () => { active = false }
+  }, [shareKey])
+
+  const copyThenDownload = useCallback(() => {
+    const payload = state.share && buildAgentSharePayload(state.share.shareKey, state.share.referralCode)
+    if (!payload || !navigator.clipboard?.writeText) return
+    navigator.clipboard.writeText(payload).then(() => {
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    }).catch(() => {})
+  }, [state.share])
+
+  if (state.kind === 'loading') return <main className="agent-landing shell"><section className="agent-card"><p>正在加载这个智能体作品…</p></section></main>
+  if (state.kind === 'error') return <main className="agent-landing shell"><section className="agent-card agent-error"><h1>作品暂时无法加载</h1><p>{state.error}</p><DownloadButton onDownload={() => {}} /></section></main>
+
+  const {share} = state
+  const title = share.template.name || '玲珑智能体作品'
+  const persona = share.template.character || '这是一个可在玲珑 MAS 中体验的专属 AI。'
+  const tags = [share.template.voice && '语音对话', share.template.language && '多语言', share.template.model && '智能模型'].filter(Boolean).slice(0, 3)
+  return <main className="agent-landing shell"><section className="agent-card">
+    <span className="agent-mark"><Sparkles size={22} /></span><p className="eyebrow">玲珑智能体作品</p><h1>{title}</h1><p className="agent-creator">由 {share.creatorName || '玲珑创作者'} 创建</p><p className="agent-persona">{persona}</p>
+    <div className="agent-tags">{tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+    <p className="agent-benefit">受邀新用户首年会员可享 ¥69，并获得创作者模板包。</p><ol><li>点击下载 Android APK</li><li>安装并登录玲珑 MAS</li><li>确认导入这个智能体作品</li></ol>
+    <DownloadButton onDownload={copyThenDownload} />{copied && <p className="agent-copied">作品信息已写入剪贴板，安装后即可继续导入。</p>}
+  </section></main>
+}
+
 function App() {
+  const shareKey = readAgentShareRoute(window.location.pathname)
   const [referralCode] = useState(() => readReferralCode(window.location.search))
   const [copied, setCopied] = useState(false)
   const copyReferral = useCallback(() => {
@@ -129,7 +177,14 @@ function App() {
     return () => observer.disconnect()
   }, [])
 
+  if (shareKey) return <><Header /><AgentLandingPage shareKey={shareKey} /></>
   return <><Header /><main><Hero referralCode={referralCode} copied={copied} onCopy={copyReferral} /><hr className="divider" /><Features /><hr className="divider" /><ProductGallery /><hr className="divider" /><Download onDownload={copyReferral} /></main><footer className="footer shell"><div><b>玲珑 MAS</b><span>Linglong Master Agent System</span></div><p>Android 正式版已发布。</p></footer></>
+}
+
+const pagesPath = window.sessionStorage.getItem('linglong-pages-path')
+if (pagesPath) {
+  window.sessionStorage.removeItem('linglong-pages-path')
+  window.history.replaceState(null, '', pagesPath)
 }
 
 createRoot(document.getElementById('root')).render(<App />)

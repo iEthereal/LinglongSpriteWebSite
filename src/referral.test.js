@@ -45,3 +45,21 @@ test('ships current product screenshots and production download copy', () => {
   )
   assert.doesNotMatch(source, /downloads\/linglong-mas\.apk/)
 })
+
+test('ships the P2 agent landing route and public API handoff', () => {
+  const source = readFileSync(new URL('./main.jsx', import.meta.url), 'utf8')
+
+  assert.match(source, /function AgentLandingPage/)
+  assert.match(source, /loadPublicAgentShare/)
+  assert.match(source, /VITE_SHARE_API_URL/)
+  assert.match(source, /创建一个真正能开口、能看、能使用工具的专属 AI/)
+})
+
+test('ships GitHub Pages deployment and deep-link fallback assets', () => {
+  const fallback = readFileSync(new URL('../public/404.html', import.meta.url), 'utf8')
+  const workflow = readFileSync(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8')
+  assert.match(fallback, /sessionStorage/)
+  assert.match(fallback, /LinglongSpriteWebSite/)
+  assert.match(workflow, /actions\/deploy-pages/)
+  assert.match(workflow, /VITE_SHARE_API_URL/)
+})
