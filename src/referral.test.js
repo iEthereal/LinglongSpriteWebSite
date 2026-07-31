@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import test from 'node:test'
-import {readReferralCode, referralPayload} from './referral.js'
+import {isReferralCode, readReferralCode, referralPayload} from './referral.js'
 
 test('trims a referral code from the URL query', () => {
   assert.equal(readReferralCode('?ref=%20FRIEND-7%20'), 'FRIEND-7')
@@ -12,6 +12,13 @@ test('trims a referral code from the URL query', () => {
 test('formats the APK handoff payload', () => {
   assert.equal(referralPayload(' FRIEND-7 '), 'LL_REF:FRIEND-7')
   assert.equal(referralPayload(' '), '')
+})
+
+test('rejects referral values outside the public attribution format', () => {
+  assert.equal(isReferralCode('FRIEND7'), true)
+  assert.equal(readReferralCode('?ref=friend7'), '')
+  assert.equal(readReferralCode('?ref=FRI'), '')
+  assert.equal(referralPayload('FRIEND7<script>'), '')
 })
 
 test('ships current product screenshots and production download copy', () => {

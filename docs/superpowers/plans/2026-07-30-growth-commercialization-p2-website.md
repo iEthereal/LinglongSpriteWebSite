@@ -12,7 +12,7 @@
 
 - `VITE_SHARE_API_URL` 的生产值必须是 `https://zjmprvpmzxlxtotroixt.supabase.co/functions/v1/share-api`；它是公开 URL，不得添加 Supabase key、服务端凭据或用户会话。
 - 作品页只接受并渲染 `shareKey`、`creatorName`、`referralCode` 与白名单化 `template`；不得渲染、存储或上报 token、Cookie、MCP endpoint、知识库 ID、聊天或支付资料。
-- `shareKey` 仅允许 12–64 位 `[A-Za-z0-9_-]`；邀请码仅允许 5–12 位大写字母或数字，且必须含至少一个数字。
+- `shareKey` 仅允许 12–64 位 `[A-Za-z0-9_-]`；邀请码仅允许 5–12 位大写字母、数字、下划线或连字符，以兼容现有 `ABCDE` 与 `FRIEND-7` 归因码。
 - APK 下载必须在同一用户点击事件内先写入 `LL_SHARE:<shareKey>|<referralCode>`，再跳转既有 GitHub Release URL；任何剪贴板错误都不能阻断下载。
 - 无效路径、未配置 API、非 2xx、非法响应和 CORS/网络失败必须显示可恢复错误与普通 APK 下载；不得使用伪造作品数据。
 - GitHub Pages 的 Pages Source 使用 GitHub Actions，且 Supabase Edge Function 的 CORS 必须允许最终 `https://iEthereal.github.io` Origin。
@@ -63,7 +63,7 @@ Expected: `ERR_MODULE_NOT_FOUND` for `src/agentShare.js`.
 
 ```js
 const shareKeyPattern = /^[A-Za-z0-9_-]{12,64}$/
-const referralPattern = /^(?=[A-Z0-9]{5,12}$)(?=.*\d)[A-Z0-9]+$/
+const referralPattern = /^[A-Z0-9_-]{5,12}$/
 
 export function buildAgentSharePayload(shareKey, referralCode) {
   return isShareKey(shareKey) && referralPattern.test(referralCode)
