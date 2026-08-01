@@ -20,7 +20,7 @@ import {
   readAgentShareRoute,
 } from './agentShare.js'
 import {shortestStageDistance, stageSlotForItem} from './productStage.js'
-import {trackWebsiteEvent} from './websiteGrowth.js'
+import {hashShareKey, trackWebsiteEvent} from './websiteGrowth.js'
 import './styles.css'
 
 const base = '/LinglongSpriteWebSite'
@@ -132,7 +132,11 @@ function AgentLandingPage({shareKey}) {
     }).then(share => {
       if (active) {
         setState({kind: 'ready', share, error: ''})
-        void trackWebsiteEvent({baseUrl: import.meta.env.VITE_GROWTH_API_URL, eventName: 'agent_landing_view'})
+        void hashShareKey(shareKey).then(shareKeyHash => trackWebsiteEvent({
+          baseUrl: import.meta.env.VITE_GROWTH_API_URL,
+          eventName: 'agent_landing_view',
+          shareKeyHash,
+        })).catch(() => {})
       }
     }).catch(error => {
       if (active) setState({kind: 'error', share: null, error: error.message || '作品暂时无法加载'})
@@ -141,7 +145,11 @@ function AgentLandingPage({shareKey}) {
   }, [shareKey])
 
   const copyThenDownload = useCallback(() => {
-    void trackWebsiteEvent({baseUrl: import.meta.env.VITE_GROWTH_API_URL, eventName: 'apk_download_clicked'})
+    void hashShareKey(shareKey).then(shareKeyHash => trackWebsiteEvent({
+      baseUrl: import.meta.env.VITE_GROWTH_API_URL,
+      eventName: 'apk_download_clicked',
+      shareKeyHash,
+    })).catch(() => {})
     const payload = state.share && buildAgentSharePayload(state.share.shareKey, state.share.referralCode)
     if (!payload || !navigator.clipboard?.writeText) return
     navigator.clipboard.writeText(payload).then(() => {
@@ -176,6 +184,7 @@ function App() {
   }, [referralCode])
 
   useEffect(() => {
+    void trackWebsiteEvent({baseUrl: import.meta.env.VITE_GROWTH_API_URL, eventName: 'landing_view'})
     const observer = new IntersectionObserver(entries => entries.forEach(entry => entry.isIntersecting && entry.target.classList.add('visible')), {threshold: 0.12, rootMargin: '0px 0px -40px 0px'})
     document.querySelectorAll('.fade-up').forEach(node => observer.observe(node))
     document.querySelectorAll('.hero .fade-up').forEach(node => window.setTimeout(() => node.classList.add('visible'), 50))
