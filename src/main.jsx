@@ -25,6 +25,7 @@ import './styles.css'
 
 const base = '/LinglongSpriteWebSite'
 const apkUrl = `${base}/downloads/linglong-mas.apk`
+const mirrorApkUrl = 'https://ghfast.top/https://github.com/iEthereal/LinglongSpriteWebSite/releases/latest/download/linglong-mas.apk'
 const qrUrl = `${base}/downloads/qr-website.png`
 
 const capabilities = [
@@ -53,8 +54,11 @@ function Header() {
   </div></header>
 }
 
-function DownloadButton({onDownload, className = 'btn-primary'}) {
-  return <a className={className} href={apkUrl} download onClick={onDownload}><ArrowDownToLine size={18} />下载 Android 正式版 APK</a>
+function DownloadButton({onDownload}) {
+  return <>
+    <a className="btn-primary" href={apkUrl} download onClick={onDownload}><ArrowDownToLine size={18} />下载 Android 正式版 APK</a>
+    <a className="btn-ghost" href={mirrorApkUrl} download onClick={onDownload}><ArrowDownToLine size={18} />镜像下载（更快）</a>
+  </>
 }
 
 function ReferralBanner({referralCode, copied, onCopy}) {
